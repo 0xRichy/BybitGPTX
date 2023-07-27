@@ -1,5 +1,6 @@
 import ccxt
 import talib
+import logging
 from bybit import bybit
 from openai import OpenAI
 
@@ -8,21 +9,33 @@ OPENAI_API_KEY = 'votre_clé_api_openai'
 BYBIT_API_KEY = 'votre_clé_api_bybit'
 BYBIT_API_SECRET = 'votre_secret_api_bybit'
 
+# Configurez la journalisation
+logging.basicConfig(level=logging.INFO)
+
 class TradingStrategy:
-    def __init__(self):
-        self.openai = OpenAI(api_key=OPENAI_API_KEY)
-        self.bybit = bybit(test=False, api_key=BYBIT_API_KEY, api_secret=BYBIT_API_SECRET)
-        self.exchange = ccxt.bybit({
-            'apiKey': BYBIT_API_KEY,
-            'secret': BYBIT_API_SECRET,
-        })
+    def __init__(self, qty=1):
+        self.qty = qty
+        try:
+            self.openai = OpenAI(api_key=OPENAI_API_KEY)
+            self.bybit = bybit(test=False, api_key=BYBIT_API_KEY, api_secret=BYBIT_API_SECRET)
+            self.exchange = ccxt.bybit({
+                'apiKey': BYBIT_API_KEY,
+                'secret': BYBIT_API_SECRET,
+            })
+        except Exception as e:
+            logging.error(f"Erreur lors de l'initialisation : {e}")
+            raise e
 
     def get_trading_action(self, market_data, symbol):
-        prompt = self._create_prompt(market_data)
-        response = self.openai.Completion.create(engine="davinci-codex", prompt=prompt, max_tokens=100)
-        action = self._parse_response(response)
-        self.execute_trade(action, symbol)
-        return action
+        try:
+            prompt = self._create_prompt(market_data)
+            response = self.openai.Completion.create(engine="davinci-codex", prompt=prompt, max_tokens=100)
+            action = self._parse_response(response)
+            self.execute_trade(action, symbol)
+            return action
+        except Exception as e:
+            logging.error(f"Erreur lors de l'obtention de l'action de trading : {e}")
+            return None
 
     def _create_prompt(self, market_data):
         # Formatez les données du marché en une chaîne de caractères
@@ -52,9 +65,12 @@ class TradingStrategy:
         return action
 
     def execute_trade(self, action, symbol):
-        if action == "Acheter":
-            # Place a buy order
-            self.bybit.place_active_order(symbol=symbol, side="Buy", order_type="Market", qty=1, time_in_force="GoodTillCancel")
-        elif action == "Vendre":
-            # Place a sell order
-            self.bybit.place_active_order(symbol=symbol, side="Sell", order_type="Market", qty=1, time_in_force="GoodTillCancel")
+        try:
+            if action == "Acheter":
+                # Place a buy order
+                self.bybit.place_active_order(symbol=symbol, side="Buy", order_type="Market", qty=self.qty, time_in_force="GoodTillCancel")
+            elif action == "Vendre":
+                # Place a sell order
+                self.bybit.place_active_order(symbol=symbol, side="Sell", order_type="Market", qty=self.qty, time_in_force="GoodTillCancel")
+        except Exception as e:
+            logging.error(f"Erreur lors de l'exécution de l'ordre de trading : {e}")
