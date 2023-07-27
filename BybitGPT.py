@@ -2,15 +2,19 @@ import ccxt
 import talib
 from bybit import bybit
 from openai import OpenAI
-from config import Config
+
+# Définissez vos clés API
+OPENAI_API_KEY = 'votre_clé_api_openai'
+BYBIT_API_KEY = 'votre_clé_api_bybit'
+BYBIT_API_SECRET = 'votre_secret_api_bybit'
 
 class TradingStrategy:
     def __init__(self):
-        self.openai = OpenAI(api_key=Config.OPENAI_API_KEY)
-        self.bybit = bybit(test=False, api_key=Config.BYBIT_API_KEY, api_secret=Config.BYBIT_API_SECRET)
+        self.openai = OpenAI(api_key=OPENAI_API_KEY)
+        self.bybit = bybit(test=False, api_key=BYBIT_API_KEY, api_secret=BYBIT_API_SECRET)
         self.exchange = ccxt.bybit({
-            'apiKey': Config.BYBIT_API_KEY,
-            'secret': Config.BYBIT_API_SECRET,
+            'apiKey': BYBIT_API_KEY,
+            'secret': BYBIT_API_SECRET,
         })
 
     def get_trading_action(self, market_data, symbol):
