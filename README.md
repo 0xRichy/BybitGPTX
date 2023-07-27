@@ -34,7 +34,7 @@ Remplacez `'votre_clé_api_openai'`, `'votre_clé_api_bybit'` et `'votre_secret_
 Une fois que vous avez défini vos clés API, vous pouvez exécuter le bot avec la commande suivante :
 
 ```bash
-python scripts/BybitGPT.py
+python3 scripts/BybitGPT.py
 ```
 
 ## Licence
