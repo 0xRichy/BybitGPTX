@@ -1,5 +1,6 @@
 import ccxt
 import talib
+import numpy as np
 import logging
 from bybit import bybit
 from openai import OpenAI
@@ -38,13 +39,22 @@ class TradingStrategy:
             return None
 
     def _create_prompt(self, market_data):
-        # Formatez les données du marché en une chaîne de caractères
-        market_data_str = "\n".join(f"{key}: {value}" for key, value in market_data.items())
-        
+        # Calculez les indicateurs techniques
+        close_prices = np.array(market_data['close'])
+        rsi = talib.RSI(close_prices)
+        sma = talib.SMA(close_prices)
+        _, _, stochastic = talib.STOCH(high=np.array(market_data['high']), low=np.array(market_data['low']), close=close_prices)
+
+        # Formatez les données du marché et les indicateurs en une chaîne de caractères
+        market_data_str = "\n".join(f"{key}: {value[-1]}" for key, value in market_data.items())
+        indicators_str = f"RSI: {rsi[-1]}\nSMA: {sma[-1]}\nStochastic: {stochastic[-1]}"
+
         # Créez le prompt pour GPT-3
         prompt = (
             f"Les données actuelles du marché sont :\n"
             f"{market_data_str}\n"
+            f"Les indicateurs techniques sont :\n"
+            f"{indicators_str}\n"
             f"Compte tenu de ces informations, quelle action de trading recommanderiez-vous ?"
         )
         
